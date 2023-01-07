@@ -13,6 +13,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "3000:3000"
     environment:
       - NGINX_HOST=${NGINX_HOST}
     restart: unless-stopped
@@ -62,12 +63,12 @@ services:
     image: redis:latest
     ports:
       - "${REDIS_HOST}:${REDIS_PORT}:6379"
-  node:
-    container_name: "${SERVER_NAME}-node"
-    image: node:latest
-    ports:
-     - "${NODE_HOST}:${NODE_PORT}:3000"
-    stdin_open: true
-    tty: true
-    volumes:
-      - "./src/client:/itsy-bitsy"
+  # node:
+  #   container_name: "${SERVER_NAME}-node"
+  #   image: node:latest
+  #   ports:
+  #    - "${NODE_HOST}:${NODE_PORT}:3000"
+  #   stdin_open: true
+  #   tty: true
+  #   volumes:
+  #     - "./src/client:/app"
