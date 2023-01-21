@@ -1,25 +1,17 @@
 version: "3"
 services:
   webserver:
-    build:
-      context: "./docker/bin/nginx"
-    image: ${SERVER_NAME}-webserver
+    image:  library/nginx:1.23.1-alpine
     container_name: "${SERVER_NAME}-webserver"
     volumes:
-      - "./docker/config/nginx/sites-enabled:/etc/nginx/sites-enabled"
-      - "./docker/config/nginx/sites-available:/etc/nginx/sites-available"
-      - "./docker/config/ssl:/etc/ssl"
+      - "./docker/config/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf"
       - "./src:/var/www/html"
     ports:
       - "80:80"
-      - "443:443"
       - "3000:3000"
     environment:
       - NGINX_HOST=${NGINX_HOST}
     restart: unless-stopped
-    command: "bash"
-    stdin_open: true
-    tty: true
     depends_on:
       - php
       - database
@@ -30,7 +22,8 @@ services:
     restart: always
     volumes:
       - "./docker/config/php/php.ini:/usr/local/etc/php/conf.d/php.ini"
-      - "./src:/var/www/html"
+      - "./src:/var/www/html/"
+    working_dir: /api/
   myadmin:
     image: phpmyadmin/phpmyadmin
     container_name: "${SERVER_NAME}-myadmin"
@@ -63,12 +56,19 @@ services:
     image: redis:latest
     ports:
       - "${REDIS_HOST}:${REDIS_PORT}:6379"
-  # node:
-  #   container_name: "${SERVER_NAME}-node"
-  #   image: node:latest
-  #   ports:
-  #    - "${NODE_HOST}:${NODE_PORT}:3000"
-  #   stdin_open: true
-  #   tty: true
-  #   volumes:
-  #     - "./src/client:/app"
+  node:
+    image: node:18.9.0-bullseye
+    container_name: "${SERVER_NAME}-node"
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    working_dir: /app/itsy-bitsy/
+    environment:
+      WEBPACK_MAX_CONCURRENT_WORKER: "auto-auto"
+      # Webpack 4 és node18 esetén szükség van erre az env-re, különben kompatibilitási problémák lesznek.
+      # https://github.com/webpack/webpack/issues/14532
+      NODE_OPTIONS: "--openssl-legacy-provider"
+    command: "bash -c \"while true; do /bin/sleep 1; done\""
+
+    volumes:
+      - "./src/client:/app"
