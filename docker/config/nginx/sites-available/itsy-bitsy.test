@@ -1,8 +1,0 @@
-server {
-    listen       80;
-    root         /var/www/html;
-    server_name  itsy-bitsy.test;
-    location ~ {
-        proxy_pass http://localhost:3000;
-    }
-}

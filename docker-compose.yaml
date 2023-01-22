@@ -1,17 +1,18 @@
-version: "3"
+version: "3.4"
 services:
   webserver:
     image:  library/nginx:1.23.1-alpine
     container_name: "${SERVER_NAME}-webserver"
     volumes:
-      - "./docker/config/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf"
+      - "./docker/config/nginx/default.conf:/etc/nginx/conf.d/default.conf"
       - "./src:/var/www/html"
     ports:
       - "80:80"
-      - "3000:3000"
     environment:
       - NGINX_HOST=${NGINX_HOST}
     restart: unless-stopped
+    networks:
+      - server
     depends_on:
       - php
       - database
@@ -24,6 +25,9 @@ services:
       - "./docker/config/php/php.ini:/usr/local/etc/php/conf.d/php.ini"
       - "./src:/var/www/html/"
     working_dir: /api/
+    networks:
+      - server
+      - database
   myadmin:
     image: phpmyadmin/phpmyadmin
     container_name: "${SERVER_NAME}-myadmin"
@@ -32,14 +36,18 @@ services:
     environment:
         - PMA_ARBITRARY=1
         - PMA_HOST=${MYSQL_HOST}
-    restart: always
+    restart: unless-stopped
+    networks:
+      - database
     depends_on:
         - database
   database:
     build:
       context: "./docker/bin/mysql"
     container_name: "${SERVER_NAME}-mysql"
-    restart: "always"
+    restart: unless-stopped
+    networks:
+      - database
     ports:
       - "${MYSQL_HOST}:${MYSQL_PORT}:3306"
     volumes:
@@ -61,7 +69,7 @@ services:
     container_name: "${SERVER_NAME}-node"
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "3000:3000"
     working_dir: /app/itsy-bitsy/
     environment:
       WEBPACK_MAX_CONCURRENT_WORKER: "auto-auto"
@@ -69,6 +77,12 @@ services:
       # https://github.com/webpack/webpack/issues/14532
       NODE_OPTIONS: "--openssl-legacy-provider"
     command: "bash -c \"while true; do /bin/sleep 1; done\""
-
     volumes:
-      - "./src/client:/app"
+      - "./src/client/itsy-bitsy:/app"
+
+volumes:
+  mysql:
+
+networks:
+  database:
+  server:
