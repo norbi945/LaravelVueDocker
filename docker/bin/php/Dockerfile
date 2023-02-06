@@ -4,3 +4,13 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"\
     && php composer-setup.php\
     && php -r "unlink('composer-setup.php');"\
     && mv composer.phar /usr/local/bin/composer
+
+RUN docker-php-ext-install pdo_mysql
+RUN docker-php-ext-install gd
+
+RUN chown -R www-data:www-data \
+    /var/www/html/storage \
+    /var/www/html/bootstrap/cache
+
+EXPOSE 9000
+CMD ["php-fpm"]

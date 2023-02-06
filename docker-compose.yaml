@@ -16,6 +16,9 @@ services:
     depends_on:
       - php
       - database
+      - node
+    links:
+     - node
   php:
     build:
       context: "./docker/bin/php"
@@ -69,16 +72,16 @@ services:
     container_name: "${SERVER_NAME}-node"
     restart: unless-stopped
     ports:
-      - "3000:3000"
-    working_dir: /app/itsy-bitsy/
+     - "3000:3000"
+    networks:
+      - server
+    working_dir: /app/
     environment:
       WEBPACK_MAX_CONCURRENT_WORKER: "auto-auto"
-      # Webpack 4 és node18 esetén szükség van erre az env-re, különben kompatibilitási problémák lesznek.
-      # https://github.com/webpack/webpack/issues/14532
       NODE_OPTIONS: "--openssl-legacy-provider"
     command: "bash -c \"while true; do /bin/sleep 1; done\""
     volumes:
-      - "./src/client/itsy-bitsy:/app"
+      - "./src/client/itsy-bitsy/:/app"
 
 volumes:
   mysql:
